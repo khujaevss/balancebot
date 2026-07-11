@@ -66,4 +66,29 @@ Accelerometer: it doesn't build up error over time — every reading is fresh, b
 **Why fusion has to happen in software:**
 This is because we only get raw data about accel and gyro from the sensor - the sensor doesn't calculate the angle itself. That's what the code is for: using math to combine the two into one corrected angle.
 
+---
+
+## Day 3 — Complementary Filter Implementation
+
+**What I did:**
+I kept the sensor still and observed the data through Serial Plotter, then tapped the table and observed how both lines reacted.
+
+**What I observed:**
+While still, the complementary filter line stayed close to ~1.2°, while the raw accelerometer line kept bouncing up and down.
+
+During the tap test, the complementary filter line showed almost no reaction, while the raw accelerometer line showed large, unfavorable spikes.
+
+**Why this happens:**
+This happens because the filter is weighted 95% toward the gyro (which is smooth and doesn't react to vibration) and only 5% toward the accelerometer (which is noisy). A tap makes the raw accelerometer spike, but that spike only gets a 5% vote in the final filtered angle — barely visible in the output.
+
+**Why it matters:**
+This matters because a real robot will constantly experience small 
+vibrations and bumps (from its own motors, an uneven floor, etc). If it reacted to every one of these as if it were a real tilt, it would overcorrect constantly and likely fall. The filter lets the robot ignore these small imperfections while still reacting correctly to real tilting.
+
+**Extra finding — startup initialization:**
+If the sensor starts already tilted (say at 90°) and `complementaryAngle` is initialized to 0, the filter would slowly climb from 0 toward 90° over roughly a second, instead of immediately showing the correct angle — because it only gets a small 5% nudge from `accelAngle` each loop. I fixed this by initializing `complementaryAngle` directly from `accelAngle` on the very 
+first loop, so the filter starts at the correct angle immediately instead of climbing up to it.
+
+
+
 
