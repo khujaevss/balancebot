@@ -40,8 +40,6 @@ void loop() {
   }
 
   // Print both for comparison
-  Serial.print(accelAngle);
-  Serial.print(",");
   Serial.print(complementaryAngle);
   Serial.println();
 
