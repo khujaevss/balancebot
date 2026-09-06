@@ -90,5 +90,27 @@ If the sensor starts already tilted (say at 90°) and `complementaryAngle` is in
 first loop, so the filter starts at the correct angle immediately instead of climbing up to it.
 
 
+## 6 Sep 2026 — IMU calibration, loop timing, alpha
+
+**Calibration** — ran `IMU_Zero`, hardcoded offsets in `setup()`:
+accel -2178 / 164 / 1600 · gyro -78 / -10 / -25
+- Gyro drift: 0.7 → 0.0268 °/s (84° → 3.2° over 2 min)
+- Offsets fixed at compile time, not re-measured at boot
+
+**Output** — now prints accel / gyro / fused, comma-separated for plotting.
+Previously only fused, which hid both failure modes.
+
+**Timing** — `delay(10)` → `micros()` wait. I2C 400 kHz, baud 115200.
+- Measured 470 loops / 5 s = **94 Hz**, dt = 0.0106 s
+- Serial prints made no difference to the count
+
+**Alpha** — α = τ/(τ+dt), τ = 0.3, dt = 0.0106 → **0.9659 / 0.0341**
+- Old 0.95 already equalled τ = 0.20 s, so this was 0.20 → 0.30 s
+- Little visible change. Now derived rather than guessed
+
+**Notes**
+- Tap test: accel spikes (shock misread as gravity), gyro flat
+- Accel hit -178° once — `atan2` wrapping at ±180, will recur on a real fall
+
 
 

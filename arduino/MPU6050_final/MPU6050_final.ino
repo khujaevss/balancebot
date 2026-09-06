@@ -4,17 +4,36 @@
 MPU6050 mpu;
 
 float complementaryAngle = 0.0;
+float gyro = 0.00;
 unsigned long lastTime = 0;
 bool firstReading = true;
+unsigned long timElapsed = 0;
+
 
 void setup() {
-  Serial.begin(38400);
+  Serial.begin(115200);
   Wire.begin();
+  Wire.setClock(400000);
   mpu.initialize();
+  mpu.setXAccelOffset(-2178);
+  mpu.setYAccelOffset(164);
+  mpu.setZAccelOffset(1600);
+  mpu.setXGyroOffset(-78);
+  mpu.setYGyroOffset(-10);
+  mpu.setZGyroOffset(-25);
   lastTime = micros();
+  timElapsed = micros();
+
 }
 
-void loop() {
+unsigned long n = 0;
+
+void loop() 
+
+{
+  n = n+1;
+
+
   int16_t ax, ay, az, gx, gy, gz;
   mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
@@ -28,6 +47,17 @@ void loop() {
 
   // Gyroscope rate in degrees/second
   float gyroRate = gx / 131.0;
+  gyro = gyro + gyroRate * dt;
+  
+  if (micros()-timElapsed >= 5000000)
+  {
+    //Serial.print("LOOPS:                              ");
+    //Serial.println(n);
+    n=0;
+    timElapsed = now;
+  }
+
+
 
   if (firstReading) {
     // Startup fix: initialize from accelAngle instead of 0
@@ -36,12 +66,26 @@ void loop() {
     firstReading = false;
   } else {
     // Complementary filter — fuse both
-    complementaryAngle = 0.95 * (complementaryAngle + gyroRate * dt) + 0.05 * accelAngle;
+    complementaryAngle = 0.9659 * (complementaryAngle + gyroRate * dt) + 0.0341 * accelAngle;
   }
 
   // Print both for comparison
+
+  Serial.print(accelAngle);
+  Serial.print(",");
+  Serial.print(gyro);
+  Serial.print(",");
   Serial.print(complementaryAngle);
   Serial.println();
 
-  delay(10);
+  while (micros() - now < 10000) 
+{
+  
+  
+}
+
+
+
+
+  
 }
