@@ -113,4 +113,46 @@ Previously only fused, which hid both failure modes.
 - Accel hit -178° once — `atan2` wrapping at ±180, will recur on a real fall
 
 
+## 11 Sep 2026 — PID class
+
+**Theory**
+
+Watched the three MATLAB PID videos and wrote answers to six concept
+questions: error sign convention, Kp too high vs too low, steady-state
+offset, why dt belongs in the integral, Kd on a noisy sensor, and windup.
+
+**Python**
+
+CS50P week 8 (OOP) and the Cookie Jar problem set, check50 passing.
+
+**PID class — `python/pid.py`**
+
+Built in five passes, each tested before starting the next: proportional,
+integral, integral clamp, derivative, `reset()`.
+
+Three decisions:
+
+- Integral clamped in both directions, silently — no exception, since it
+  engages whenever the robot is held off the ground
+- Derivative taken on the measurement, not the error, to avoid a spike
+  when the outer loop starts moving the setpoint
+- Previous measurement stored *after* the derivative is calculated —
+  reversing those two lines makes the derivative read zero on every call
+
+**Bugs**
+
+- Lower clamp branch assigned the positive limit instead of the negative
+- The ordering issue above
+
+Neither raised an error at runtime.
+
+**Status**
+
+All five checks pass. Converting them to pytest on Sunday.
+
+**Outstanding**
+
+First call after `reset()` spikes the derivative — the stored previous measurement starts at zero while the robot sits at a real angle. Week 3.
+
+
 
