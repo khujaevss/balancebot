@@ -26,10 +26,3 @@ class PID:
     def reset(self):
         self.integral = 0.0
         self.last_measurement = 0.0
-
-pid = PID(1, 1, 0, integral_limit=None)
-for _ in range(100):
-    pid.compute(1.0, 0.0106)
-pid.reset()
-fresh = PID(1, 1, 0)
-print(pid.compute(1.0, 0.0106), fresh.compute(1.0, 0.0106))
