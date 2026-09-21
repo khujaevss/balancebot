@@ -154,5 +154,47 @@ All five checks pass. Converting them to pytest on Sunday.
 
 First call after `reset()` spikes the derivative — the stored previous measurement starts at zero while the robot sits at a real angle. Week 3.
 
+## 15–20 Sept 2026 — C++ revision, PID ported to C++, loop pinned at 100 Hz
+
+### C++ revision
+- Worked through Bro Code topics 1–20 (basics → inheritance). Drilled namespaces,
+  pointers, structs, classes with small exercises (`Battery`, `RateLimiter`).
+- Kept tripping on the same thing: putting a type in front of an assignment
+  (`int charge = ...`, `float kp = ...`) inside a method. Creates a local that
+  shadows the member and dies at the end of the function. Member never changes.
+- Ran a .cpp with Python by accident — Python's SyntaxError is the giveaway.
+
+### PID class in C++ (`firmware/balance/PID.h`, `PID.cpp`)
+- Ported from the Python version. Gains + integral + prevMeasurement + firstCall.
+- Anti-windup: integral clamped at 255/ki, so the I term alone can't exceed full
+  PWM. Guarded for ki = 0 (255/0 → inf → clamp silently never fires).
+  Started with a magic 50 — wrong, it only means anything for one ki.
+- Derivative on measurement, not error → no derivative kick when the setpoint
+  jumps. Matters once the Pi sends lean targets.
+- firstCall flag skips D on the first update. Without it, starting at 30° with
+  prevMeasurement = 0 fires ~3000 × kd at the motors. reset() re-arms it.
+- Bugs found: `prevMeasurement = measurement` placed before the D calc → D always 0;
+  `if (dt = 0)` assigned instead of compared (-Wall caught it).
+- `test/test_pid.cpp`: 7 checks (P, I, D, clamp, reset, first-call, reset re-arm).
+  All pass. Rerun after any change to PID.cpp.
+
+### Loop timing: 94 → 100 Hz
+- Old loop waited 10 ms from *after* the IMU read → 10 ms + ~0.6 ms → 94 Hz.
+- Now on a fixed timetable: `lastTick += 10000`. Lateness doesn't accumulate.
+  Unsigned subtraction survives the micros() wrap.
+- Confirmed on hardware: LOOPS: 500 per 5 s.
+- dt changed 0.0106 → 0.0100, so α = 0.9659 now gives τ ≈ 0.283 s (was 0.300 s).
+  α-from-dt fix still open.
+
+### PID on real IMU data (Kp 10, Ki 0, Kd 0, balancePoint 0)
+- Flat: angle ≈ 0, output jitters ±0.3 → ±0.03° of angle noise.
+- ±5° tilt → ±50. Matches 10 × 5.
+- **Sign:** VCC edge down → angle −5°, output +50. INT edge down → angle +5°, output −50.
+
+### Open
+- Fall cutoff (>45° → output 0 + reset), output clamp ±255, α-from-dt
+- driveMotors() for DRV8833, log_serial.py
+- Order parts if not already. Real balancePoint needs the chassis.
+
 
 
