@@ -10,6 +10,8 @@ class PID
         float prevMeasurement;
         float integralMax;
         bool firstCall;
+        float outMin = -255;
+        float outMax = 255;
     public:
         PID (float p, float i, float d);
 
@@ -18,5 +20,8 @@ class PID
         void reset();
 
         void setGains(float p, float i, float d);
+
+        void setOutputLimits(float min, float max);
+
 
 };

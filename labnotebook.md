@@ -196,5 +196,33 @@ First call after `reset()` spikes the derivative — the stored previous measure
 - driveMotors() for DRV8833, log_serial.py
 - Order parts if not already. Real balancePoint needs the chassis.
 
+## Thu 1 Oct 2026 — PID output clamp (D2)
+
+**Did**
+- Added output limits to the PID class (`outMin`/`outMax`, default ±255) with a
+  `setOutputLimits()` setter that ignores limits given in the wrong order.
+- `update()` now clamps P + I + D before returning, so the controller can never
+  ask the motors for more than 100% duty.
+- Added 5 host tests (clamp high/low, inside limits, custom limits, wrong-order
+  limits ignored). All 12 tests pass.
+
+**Why**
+- The Uno can't output a variable voltage. It makes PWM: the motor driver switches
+  the battery fully on and off fast, and the motor feels the average.
+  `analogWrite` takes 0–255 because the timer counts on 8 bits, so 255 = always on.
+- The PID maths has no idea of that limit. A big tilt can produce a value far above
+  255, which the Uno truncates into a wrong, smaller duty — less push exactly when
+  the robot needs the most.
+
+**Tripped me up**
+- Swapped the default min/max — the setter's min < max check exists for this.
+- `min = min` assigned the parameter to itself; members are what go on the left.
+- Second clamp check compared against `outMax` instead of `outMin` — every output
+  below the max came out as −255. The tests caught it.
+- Host compile failed until I pointed g++ at the sketch folder (`-I`).
+
+**Next**
+- Anti-windup (conditional integration) — Sat 3 Oct, before D3.
+
 
 

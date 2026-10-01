@@ -59,8 +59,19 @@ float PID::update(float measurement, float setpoint, float dt)
     }
 
     prevMeasurement = measurement;
+    float output = kp*error + ki*integral + derivative;
 
-    return kp*error + ki*integral + derivative;
+    if (output > outMax)
+    {
+        output = outMax;
+    }
+
+    else if (output < outMin)
+    {
+        output = outMin;
+    }
+
+    return output;
 }
 
 void PID::reset()
@@ -86,4 +97,14 @@ void PID :: setGains( float p, float i, float d)
         integralMax = 255 /ki;
     }
     
+}
+
+void PID::setOutputLimits( float min, float max)
+{
+    if (min < max)
+    {
+        outMin = min;
+        outMax = max;
+    }
+
 }
