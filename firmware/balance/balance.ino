@@ -17,6 +17,12 @@ const unsigned long LOOP_US = 10000;   // NEW: 100 Hz = 10 000 µs
 
 PID pid(10, 0, 0);
 float balancePoint = 0;
+bool motorsEnabled = false;
+int uprightCount = 0;
+
+const float TRIP_ANGLE = 45.0;   // if past this then disarm
+const float ARM_ANGLE  = 5.0;    // must be inside this to arm
+const int   ARM_LOOPS  = 200;    // wait 2s before balancing
 
 
 void setup() {
@@ -75,11 +81,36 @@ void loop()
   {
     complementaryAngle = 0.9659 * (complementaryAngle + gyroRate * dt) + 0.0341 * accelAngle;
   }
-  float output =pid.update(complementaryAngle, balancePoint, dt);
 
+  if (motorsEnabled == true && fabs(complementaryAngle) > TRIP_ANGLE)
+  {
+    motorsEnabled = false;
+    uprightCount = 0;
+    pid.reset();
+  }
 
+  if (motorsEnabled == false)
+  {
+    if (fabs(complementaryAngle) < ARM_ANGLE)
+      {
+        uprightCount += 1;
+      }
+    else
+      {
+        uprightCount=0;
+      }
+    if (uprightCount>= ARM_LOOPS)
+      {
+        motorsEnabled = true;
+      }
+  }
 
+  float output = 0;
 
+  if (motorsEnabled == true)
+  {
+    output = pid.update(complementaryAngle, balancePoint, dt);
+  }
 
   Serial.print(accelAngle);
   Serial.print(",");
@@ -88,5 +119,9 @@ void loop()
   Serial.print(complementaryAngle);
   Serial.print(",");
   Serial.print(output);
+  Serial.print(",");
+  Serial.print(motorsEnabled);
+  Serial.print(",");
+  Serial.print(uprightCount);
   Serial.println();
 }
