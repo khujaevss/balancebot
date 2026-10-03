@@ -75,5 +75,21 @@ int main()
     badLim.setOutputLimits(60, -60);
     std::cout << "OB   " << badLim.update(0, 100, 0.01) << "\t\t\texpect 255\n";
     
+        // Anti-windup. Maxed out for 20 steps (error +100), then a small error the other way.
+    // Without anti-windup the stored integral keeps pushing the wrong way for 32 steps.
+    PID windup(10, 5, 0);
+    for (int i = 0; i < 20; i++)
+    {
+        windup.update(0, 100, 0.1);
+    }
+    int steps = 0;
+    float out = 1;
+    while (out >= 0 && steps < 100)
+    {
+        out = windup.update(0, -10, 0.1);
+        steps++;
+    }
+    std::cout << "W    " << steps << "\t\t\texpect 1 (32 without anti-windup)\n";
+    
     return 0;
 }

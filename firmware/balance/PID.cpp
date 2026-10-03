@@ -27,17 +27,6 @@ float PID::update(float measurement, float setpoint, float dt)
 {
     float error = setpoint - measurement;
 
-    integral += error * dt;
-
-    if (integral > integralMax)
-    {
-        integral = integralMax;
-    
-    }
-    else if (integral < -integralMax)
-    {
-        integral = -integralMax;
-    }
     float derivative;
 
     if (firstCall == true)
@@ -57,6 +46,33 @@ float PID::update(float measurement, float setpoint, float dt)
         }
 
     }
+
+    float wouldBe = kp*error + ki*integral + derivative;
+
+    bool saturated = false;
+
+     if (wouldBe > outMax && error > 0 || wouldBe < outMin && error < 0)
+    {
+        saturated = true;
+    }   
+
+    if (!saturated)
+    {
+
+        integral += error * dt;
+
+        if (integral > integralMax)
+        {
+            integral = integralMax;
+    
+        }
+        else if (integral < -integralMax)
+        {
+            integral = -integralMax;
+        }
+
+    }
+
 
     prevMeasurement = measurement;
     float output = kp*error + ki*integral + derivative;
