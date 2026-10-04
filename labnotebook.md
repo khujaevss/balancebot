@@ -225,4 +225,18 @@ First call after `reset()` spikes the derivative — the stored previous measure
 - Anti-windup (conditional integration) — Sat 3 Oct, before D3.
 
 
+## Sat 3 – Sun 4 Oct 2026 — Anti-windup, fall cutoff (D3), filter α (D4)
+
+**Did**
+- Anti-windup: skip integrating while the output is maxed in the error's direction.
+  Windup test: pushes back in 1 step instead of 32. 13/13 tests pass.
+- Fall cutoff: motors off past 45°; re-enabled only after being held within 5° for 2 s.
+  Named it `motorsEnabled` — allowed to drive, not driving.
+- Hand test with the IMU: all 5 checks pass.
+- Filter α: was tuned at 94 Hz, loop now runs at 100 Hz. Recomputed from τ = 0.30 s:
+  α = τ/(τ+dt) = 0.30/0.31 = 0.9677. Recompute if the loop rate changes.
+
+**Learned**
+- The angle only measures tilt around the IMU's X axis — X must run parallel to the axle.
+- New CH340G Uno clone didn't show up on Linux: brltty was grabbing the port.
 

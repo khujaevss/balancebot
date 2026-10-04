@@ -79,7 +79,7 @@ void loop()
   else 
 
   {
-    complementaryAngle = 0.9659 * (complementaryAngle + gyroRate * dt) + 0.0341 * accelAngle;
+    complementaryAngle = 0.9677 * (complementaryAngle + gyroRate * dt) + 0.0323 * accelAngle;   // α = τ/(τ+dt)
   }
 
   if (motorsEnabled == true && fabs(complementaryAngle) > TRIP_ANGLE)
